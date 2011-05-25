@@ -12,7 +12,6 @@ public class Card {
 	private JLabel jLabel = new JLabel();
 	private ImageIcon icon;
 	private boolean picked;
-	private POSITION position;
 	private Point location;
 	private String name;
 
@@ -24,16 +23,15 @@ public class Card {
 		return this.jLabel;
 	}
 
-	public Card(ImageIcon icon, POSITION position, Point location) {
+	public Card(ImageIcon icon, Point location) {
 		this.icon = icon;
 		this.name = icon.getDescription();
-		this.position = position;
 		this.location = location;
 		jLabel.setName(icon.getDescription());
 		resetJLabel();
 	}
 
-	public void Pick() {
+	public void Pick(POSITION position) {
 		if (!picked) {
 			switch (position) {
 				case TOP: location.y += Offset; break;
@@ -53,6 +51,12 @@ public class Card {
 		resetJLabel();
 	}
 
+	void Move(Point destination) {
+		location = destination;
+		picked = false;
+		resetJLabel();
+	}
+
 	public void Scale(float ratio) {
 		int width = (int) (icon.getIconWidth() * ratio);
 		int height = (int) (icon.getIconHeight() * ratio);
@@ -69,4 +73,5 @@ public class Card {
 		jLabel.setIcon(icon);
 		jLabel.setBounds((int) location.getX(), (int) location.getY(), icon.getIconWidth(), icon.getIconHeight());
 	}
+
 }

@@ -13,26 +13,23 @@ import org.jdesktop.application.ResourceMap;
 
 public class Player {
 
-	private static ResourceMap resourceMap;
 	private ArrayList<Card> cards = new ArrayList<Card>();
 	private String name;
 	private POSITION position;
 	private String pickedName = "";
-	private char cardTypeOnboard;
-	private int point;
-	private JPanel boardPanel;
+	private Card pickedCard = null;
+
+	private static ResourceMap resourceMap;
+	private static char cardTypeOnboard;
+	private static JPanel boardPanel;
 	private static boolean hasHelp = Boolean.FALSE;
 
+	public String getPickedName() {
+		return pickedName;
+	}
+
 	public void setCardTypeOnboard(char cardTypeOnboard) {
-		this.cardTypeOnboard = cardTypeOnboard;
-	}
-
-	public int getPoint() {
-		return point;
-	}
-
-	public void setPoint(int point) {
-		this.point = point;
+		Player.cardTypeOnboard = cardTypeOnboard;
 	}
 
 	public static void setResourceMap(ResourceMap resourceMap) {
@@ -42,7 +39,7 @@ public class Player {
 	public Player(String name, POSITION position, JPanel boardPanel) {
 		this.name = name;
 		this.position = position;
-		this.boardPanel = boardPanel;
+		Player.boardPanel = boardPanel;
 	}
 
 	public ArrayList<JLabel> getCardLabels() {
@@ -54,11 +51,27 @@ public class Player {
 	}
 
 	// Generate the cards if new game and load old cards if loading.
-	public void Prepare(int slot) {
-		List shuffledCards = Global.getShuffledCards();
+	public void Prepare(List shuffledCards) {
+		
+		/* pos is the first position of cards.
+		   offset is the gap between cards. */
+		Point pos = null, offset = null;
+
+		switch(this.position) {
+			case TOP   : 	pos = new Point(150,20); offset = new Point(20, 0);  break;
+			case RIGHT : 	pos = new Point(150 + 13*20 + 100, 20); offset = new Point(0,20);break;
+			case BOTTOM: 	pos = new Point(150, 20 + 13*20); offset = new Point(20,0);break;
+			case LEFT  : 	pos = new Point(20 ,20);
+					offset = new Point(0,20); break;
+		}
+		
+		/* '1' and 1 in ascii is 48 difference so we minus 48 to get the int */
+		int slot = (int)name.charAt(name.length()-1)-48;
 		for (int i = (slot-1)*13 ; i < slot*13; i++) {
 			CARD_TYPES type = (CARD_TYPES) shuffledCards.get(i);
-			Point location = new Point(50, 50+i*20);
+			int cardOrder = i - (slot-1) * 13;
+			Point location = new Point(pos.x + offset.x*cardOrder, pos.y+offset.y*cardOrder);
+
 			switch(type) {
 				/* Spades */
 				case SACE: addCard("SACE", location); break;
@@ -138,7 +151,7 @@ public class Player {
 			for (int i = 0; i < cards.size(); i++) {
 				Card card = cards.get(i);
 				if (card.getName().equals(name)) {
-					card.Pick();
+					card.Pick(position);
 					pickedName = pickedName.equals("") ? name : "";
 					break;
 				}
@@ -149,9 +162,11 @@ public class Player {
 	private void addCard(String name, Point location) {
 		ImageIcon icon = resourceMap.getImageIcon("Game." + name);
 		icon.setDescription(name);
-		Card card = new Card(icon, this.position,location);
+		Card card = new Card(icon,location);
 		cards.add(card);
 	}
+
+	/* add help hints in the board */
 	private void addHelp() {
 		if (!hasHelp) {
 			final JLabel helpLabel = new JLabel("Bạn phải chọn quân bài cùng loại với đối thủ");
@@ -161,17 +176,44 @@ public class Player {
 			boardPanel.revalidate();
 			boardPanel.repaint();
 			hasHelp = Boolean.TRUE;
-			new java.util.Timer().schedule(
-				new java.util.TimerTask() {
-					@Override
-					public void run() {
-						boardPanel.remove(helpLabel);
-						boardPanel.revalidate();
-						boardPanel.repaint();
-						hasHelp = Boolean.FALSE;
-					}
-				}, 3000
-				);
+
+			/* wait 3 seconds and then remove the hint help */
+			new java.util.Timer().schedule(new java.util.TimerTask() {
+				@Override
+				public void run() {
+					boardPanel.remove(helpLabel);
+					boardPanel.revalidate();
+					boardPanel.repaint();
+					hasHelp = Boolean.FALSE;
+				}
+			}, 3000);
+		}
+	}
+
+	/* Player moves his picked card to the board */
+	public void MoveCard() {
+		if (!pickedName.equals("")) {
+			Point destination = null; // this is the position the picked card will be moved to
+			switch(this.position) {
+				case TOP   : destination = new Point (200,200); break;
+				case RIGHT : destination = new Point (200,200); break;
+				case BOTTOM: destination = new Point (200,200); break;
+				case LEFT  : destination = new Point (200,200); break;
+			}
+			for (int i = 0; i < cards.size(); i++) {
+				final Card card = cards.get(i);
+				if (card.getName().equals(pickedName)) {
+					card.Move(destination);
+					cards.remove(card);
+					
+					/* wait 3 seconds then the card disappeared */
+					new java.util.Timer().schedule(new java.util.TimerTask() {
+						@Override
+						public void run() { card.getJLabel().setVisible(false); }
+					}, 3000); 
+					break;
+				}
+			}
 		}
 	}
 

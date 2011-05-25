@@ -14,23 +14,25 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.List;
+import javaheart.Game.Global;
 import javaheart.Game.Global.POSITION;
 import javaheart.Game.Player;
 import javax.swing.BorderFactory;
 import javax.swing.Timer;
 import javax.swing.Icon;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.border.BevelBorder;
-import javax.xml.bind.JAXB;
 
 /**
  * The application's main frame.
  */
 public class JavaHeartView extends FrameView implements MouseListener {
 
-	private Player player;
+	private ArrayList<Player> players;
+	private static Player currentPlayer;
 	private JLabel tmpLabel;
 
 	// Catch mouse pressed
@@ -41,15 +43,37 @@ public class JavaHeartView extends FrameView implements MouseListener {
 
 
 		/* Our program begin here */
-		player = new Player("Player1", POSITION.LEFT, mainPanel);
 		Player.setResourceMap(getResourceMap());
-		player.Prepare(1);
-		player.EnterBoard();
-		player.setCardTypeOnboard('S');
-		ArrayList<JLabel> labels = player.getCardLabels();
-		for (int i = 0; i < labels.size(); i++) {
-			labels.get(i).addMouseListener(this);
+		/* Get the shuffled cards here */
+		List shuffledCards = Global.getShuffledCards();
+
+		players = new ArrayList<Player>();
+		players.add(new Player("Player1", POSITION.BOTTOM, mainPanel));
+		players.add(new Player("Player2", POSITION.RIGHT, mainPanel));
+		players.add(new Player("Player3", POSITION.TOP, mainPanel));
+		players.add(new Player("Player4", POSITION.LEFT, mainPanel));
+
+		for (Player player : players) {
+			player.Prepare(shuffledCards);
+			player.EnterBoard();
+			ArrayList<JLabel> labels = player.getCardLabels();
+			for (int i = 0; i < labels.size(); i++) {
+				labels.get(i).addMouseListener(this);
+			}
 		}
+
+		currentPlayer = players.get(0);
+
+		/* test button */
+		JButton button = new JButton("play");
+		button.setBounds(150, 150, 100, 50);
+		ActionListener actionListener = new ActionListener() {
+			public void actionPerformed(ActionEvent actionEvent) {
+					currentPlayer.MoveCard();
+			}
+		};
+		button.addActionListener(actionListener);
+		mainPanel.add(button);
 
 		/* Our program end here */
 
@@ -163,8 +187,8 @@ public class JavaHeartView extends FrameView implements MouseListener {
 	private JDialog aboutBox;
 
 	public void mouseClicked(MouseEvent e) {
-		JLabel label = (JLabel) e.getSource();	
-		player.Pick(label.getName());
+		JLabel label = (JLabel) e.getSource();
+		currentPlayer.Pick(label.getName());
 	}
 
 	public void mousePressed(MouseEvent e) {
@@ -174,12 +198,12 @@ public class JavaHeartView extends FrameView implements MouseListener {
 	}
 
 	public void mouseEntered(MouseEvent e) {
-		JLabel label = (JLabel) e.getSource();	
+		JLabel label = (JLabel) e.getSource();
 		label.setBorder(BorderFactory.createEtchedBorder(Color.lightGray, Color.yellow));
 	}
 
 	public void mouseExited(MouseEvent e) {
-		JLabel label = (JLabel) e.getSource();	
+		JLabel label = (JLabel) e.getSource();
 		label.setBorder(BorderFactory.createLineBorder(Color.yellow, 0));
 	}
 }
