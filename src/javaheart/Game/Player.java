@@ -22,6 +22,8 @@ public class Player {
 	private static JPanel boardPanel;
 	private static boolean hasHelp = Boolean.FALSE;
 
+	/* Rules related variable */
+	private static boolean heartBroken = Boolean.FALSE;
 
 	public Card getPickedCard() {
 		return pickedCard;
@@ -139,27 +141,74 @@ public class Player {
 	}
 
 	public void Pick(String name) {
-		boolean sameType = cardTypeOnboard == name.charAt(0);
-		if (cardTypeOnboard ==  '\u0000')
-			sameType = true;
-		
-		if (!sameType) { addHelp(); }
-		else if (sameType && pickedCard == null) {
-			for (int i = 0; i < cards.size(); i++) {
-				Card card = cards.get(i);
-				if (card.getName().equals(name)) {
-					pickedCard = card;
-					pickedCard.Pick(position);
+		char pickedCardType = name.charAt(0);
+		boolean onlyHeart = Boolean.FALSE;
+		boolean hasSameTypeCard = Boolean.FALSE;	
+		/* Rules: you can't pick a heart while you have another type of card */
+		if (pickedCardType == 'H' && !heartBroken) {
+			onlyHeart = Boolean.TRUE;
+			for (Card card : cards) {
+				if (card.getName().charAt(0) != 'H') {
+					addHelp("Trái tim chưa bị vỡ, đề nghị bạn đánh con khác con cơ.");
+					onlyHeart = Boolean.FALSE;
+					break;
+				}
+			}
+			/* if you have only hearts */
+			if (onlyHeart) heartBroken = Boolean.TRUE;
+		}
+		/* Rules: You must pick the card has the same type of the one who leads */
+		if (pickedCardType != cardTypeOnboard) {
+			if (cardTypeOnboard == '\u0000') hasSameTypeCard = Boolean.TRUE;
+			for (Card card : cards) {
+				if (card.getName().charAt(0) == cardTypeOnboard) {
+					addHelp("Bạn phải chọn quân bài cùng loại với đối thủ");
+					hasSameTypeCard = Boolean.TRUE;
 					break;
 				}
 			}
 		}
-		else if (sameType && pickedCard != null) {
+		
+		if (pickedCard != null) {
 			pickedCard.Pick(position);
+			pickedCard = null;
+		} else if( heartBroken 
+		    || (pickedCardType != 'H' && !hasSameTypeCard) 
+		    || (pickedCardType != 'H' && hasSameTypeCard) ) 
+		{ pickCard(name);}
+		/* unpick the card */
+	}
+
+	public void MoveCard() {
+		if (pickedCard != null) {
+			Point destination = null; // this is the position the picked card will be moved to
+			switch(this.position) {
+				case TOP   : destination = new Point (300,150); break;
+				case RIGHT : destination = new Point (350,200); break;
+				case BOTTOM: destination = new Point (300,250); break;
+				case LEFT  : destination = new Point (220,170); break;
+			}
+			pickedCard.Move(destination) ;
+		}
+	}
+
+	public void RemovePickedcard() {
+		if (pickedCard != null) {
+			cards.remove(pickedCard);
 			pickedCard = null;
 		}
 	}
+
 	// Helpers
+	private void pickCard(String name) {
+		for (Card card : cards) {
+			if (card.getName().equals(name)) {
+				pickedCard = card;
+				pickedCard.Pick(position);
+				break;
+			}
+		}	
+	}
 	private void addCard(String name, Point location) {
 		ImageIcon icon = resourceMap.getImageIcon("Game." + name);
 		icon.setDescription(name);
@@ -168,9 +217,9 @@ public class Player {
 	}
 
 	/* add help hints in the board */
-	private void addHelp() {
+	private void addHelp(String msg) {
 		if (!hasHelp) {
-			final JLabel helpLabel = new JLabel("Bạn phải chọn quân bài cùng loại với đối thủ");
+			final JLabel helpLabel = new JLabel(msg);
 			helpLabel.setBounds(200, 200, 250, 30);
 			helpLabel.setFont(new Font("Tahoma", Font.BOLD, 11));
 			boardPanel.add(helpLabel);
@@ -191,24 +240,5 @@ public class Player {
 		}
 	}
 
-	/* Player moves his picked card to the board */
-	public void MoveCard() {
-		if (pickedCard != null) {
-			Point destination = null; // this is the position the picked card will be moved to
-			switch(this.position) {
-				case TOP   : destination = new Point (300,150); break;
-				case RIGHT : destination = new Point (350,200); break;
-				case BOTTOM: destination = new Point (300,250); break;
-				case LEFT  : destination = new Point (220,170); break;
-			}
-			pickedCard.Move(destination) ;
-		}
-	}
-	public void RemovePickedcard() {
-		if (pickedCard != null) {
-			cards.remove(pickedCard);
-			pickedCard = null;
-		}
-	}
 
 }

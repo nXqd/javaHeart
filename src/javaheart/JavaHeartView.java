@@ -33,7 +33,6 @@ public class JavaHeartView extends FrameView implements MouseListener {
 
 	private ArrayList<Player> players ;
 	private static int currentPlayerId;
-	private JLabel tmpLabel;
 	private static int cardOnboard;
 
 	// Catch mouse pressed
@@ -48,6 +47,7 @@ public class JavaHeartView extends FrameView implements MouseListener {
 		/* Get the shuffled cards here */
 		List shuffledCards = Global.getShuffledCards();
 
+		/* Deal */
 		players = new ArrayList<Player>();
 		players.add(new Player("Player1", POSITION.BOTTOM, mainPanel));
 		players.add(new Player("Player2", POSITION.LEFT, mainPanel));
@@ -73,10 +73,12 @@ public class JavaHeartView extends FrameView implements MouseListener {
 		button.setBounds(800, 100, 100, 50);
 		ActionListener actionListener = new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
+					if (players.get(currentPlayerId).getPickedCard() == null) return;
 					players.get(currentPlayerId).MoveCard();
 					if (cardOnboard == 3) {
+						Player.setCardTypeOnboard('\u0000');
 						cardOnboard = 0;
-						/* remove all card on baord */
+						/* remove all cards on board */
 						new java.util.Timer().schedule(new java.util.TimerTask() {
 							@Override
 							public void run() {
@@ -85,16 +87,14 @@ public class JavaHeartView extends FrameView implements MouseListener {
 									player.RemovePickedcard();
 								}
 							}
-						}, 3000); 
-					}
-					else cardOnboard++;
+						}, 1000); 
+					} else cardOnboard++;
 					/* if this is the first card moved on board so it sets the type of card onboard */
 					if (cardOnboard == 1) {
 						String firstPicked = players.get(currentPlayerId).getPickedCard().getName();
 						Player.setCardTypeOnboard(firstPicked.charAt(0));
 					}
-
-					/* cycle around players */
+					/* cycles around players */
 					if (currentPlayerId == 3) currentPlayerId = 0;
 					else currentPlayerId++;
 			}
