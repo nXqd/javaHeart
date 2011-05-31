@@ -31,9 +31,10 @@ import javax.swing.JLabel;
  */
 public class JavaHeartView extends FrameView implements MouseListener {
 
-	private ArrayList<Player> players;
-	private static Player currentPlayer;
+	private ArrayList<Player> players ;
+	private static int currentPlayerId;
 	private JLabel tmpLabel;
+	private static int cardOnboard;
 
 	// Catch mouse pressed
 	public JavaHeartView(SingleFrameApplication app) {
@@ -49,10 +50,11 @@ public class JavaHeartView extends FrameView implements MouseListener {
 
 		players = new ArrayList<Player>();
 		players.add(new Player("Player1", POSITION.BOTTOM, mainPanel));
-		players.add(new Player("Player2", POSITION.RIGHT, mainPanel));
+		players.add(new Player("Player2", POSITION.LEFT, mainPanel));
 		players.add(new Player("Player3", POSITION.TOP, mainPanel));
-		players.add(new Player("Player4", POSITION.LEFT, mainPanel));
+		players.add(new Player("Player4", POSITION.RIGHT, mainPanel));
 
+		/* Add events to click a card */
 		for (Player player : players) {
 			player.Prepare(shuffledCards);
 			player.EnterBoard();
@@ -62,18 +64,44 @@ public class JavaHeartView extends FrameView implements MouseListener {
 			}
 		}
 
-		currentPlayer = players.get(0);
+		currentPlayerId = 0;
+		/* first there is no card on board */
+		cardOnboard = 0; 
 
-		/* test button */
+		/* play button */
 		JButton button = new JButton("play");
-		button.setBounds(150, 150, 100, 50);
+		button.setBounds(800, 100, 100, 50);
 		ActionListener actionListener = new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
-					currentPlayer.MoveCard();
+					players.get(currentPlayerId).MoveCard();
+					if (cardOnboard == 3) {
+						cardOnboard = 0;
+						/* remove all card on baord */
+						new java.util.Timer().schedule(new java.util.TimerTask() {
+							@Override
+							public void run() {
+								for (Player player : players) {
+									player.getPickedCard().getJLabel().setVisible(false);
+									player.RemovePickedcard();
+								}
+							}
+						}, 3000); 
+					}
+					else cardOnboard++;
+					/* if this is the first card moved on board so it sets the type of card onboard */
+					if (cardOnboard == 1) {
+						String firstPicked = players.get(currentPlayerId).getPickedCard().getName();
+						Player.setCardTypeOnboard(firstPicked.charAt(0));
+					}
+
+					/* cycle around players */
+					if (currentPlayerId == 3) currentPlayerId = 0;
+					else currentPlayerId++;
 			}
 		};
 		button.addActionListener(actionListener);
 		mainPanel.add(button);
+		/* end play button */
 
 		/* Our program end here */
 
@@ -188,7 +216,7 @@ public class JavaHeartView extends FrameView implements MouseListener {
 
 	public void mouseClicked(MouseEvent e) {
 		JLabel label = (JLabel) e.getSource();
-		currentPlayer.Pick(label.getName());
+		players.get(currentPlayerId).Pick(label.getName());
 	}
 
 	public void mousePressed(MouseEvent e) {

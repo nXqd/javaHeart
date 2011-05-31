@@ -16,19 +16,18 @@ public class Player {
 	private ArrayList<Card> cards = new ArrayList<Card>();
 	private String name;
 	private POSITION position;
-	private String pickedName = "";
 	private Card pickedCard = null;
-
 	private static ResourceMap resourceMap;
 	private static char cardTypeOnboard;
 	private static JPanel boardPanel;
 	private static boolean hasHelp = Boolean.FALSE;
 
-	public String getPickedName() {
-		return pickedName;
+
+	public Card getPickedCard() {
+		return pickedCard;
 	}
 
-	public void setCardTypeOnboard(char cardTypeOnboard) {
+	public static void setCardTypeOnboard(char cardTypeOnboard) {
 		Player.cardTypeOnboard = cardTypeOnboard;
 	}
 
@@ -58,11 +57,10 @@ public class Player {
 		Point pos = null, offset = null;
 
 		switch(this.position) {
-			case TOP   : 	pos = new Point(150,20); offset = new Point(20, 0);  break;
-			case RIGHT : 	pos = new Point(150 + 13*20 + 100, 20); offset = new Point(0,20);break;
-			case BOTTOM: 	pos = new Point(150, 20 + 13*20); offset = new Point(20,0);break;
-			case LEFT  : 	pos = new Point(20 ,20);
-					offset = new Point(0,20); break;
+			case TOP   : 	pos = new Point(200,20); offset = new Point(20, 0);  break;
+			case RIGHT : 	pos = new Point(200 + 13*20 + 170, 80); offset = new Point(0,20);break;
+			case BOTTOM: 	pos = new Point(200, 20 + 13*20 + 100); offset = new Point(20,0);break;
+			case LEFT  : 	pos = new Point(20 , 80); offset = new Point(0,20); break;
 		}
 		
 		/* '1' and 1 in ascii is 48 difference so we minus 48 to get the int */
@@ -144,18 +142,21 @@ public class Player {
 		boolean sameType = cardTypeOnboard == name.charAt(0);
 		if (cardTypeOnboard ==  '\u0000')
 			sameType = true;
-
-		if (!sameType) {
-			addHelp();	
-		} else if (sameType && (pickedName.equals("") || pickedName.equals(name))) {
+		
+		if (!sameType) { addHelp(); }
+		else if (sameType && pickedCard == null) {
 			for (int i = 0; i < cards.size(); i++) {
 				Card card = cards.get(i);
 				if (card.getName().equals(name)) {
-					card.Pick(position);
-					pickedName = pickedName.equals("") ? name : "";
+					pickedCard = card;
+					pickedCard.Pick(position);
 					break;
 				}
 			}
+		}
+		else if (sameType && pickedCard != null) {
+			pickedCard.Pick(position);
+			pickedCard = null;
 		}
 	}
 	// Helpers
@@ -192,28 +193,21 @@ public class Player {
 
 	/* Player moves his picked card to the board */
 	public void MoveCard() {
-		if (!pickedName.equals("")) {
+		if (pickedCard != null) {
 			Point destination = null; // this is the position the picked card will be moved to
 			switch(this.position) {
-				case TOP   : destination = new Point (200,200); break;
-				case RIGHT : destination = new Point (200,200); break;
-				case BOTTOM: destination = new Point (200,200); break;
-				case LEFT  : destination = new Point (200,200); break;
+				case TOP   : destination = new Point (300,150); break;
+				case RIGHT : destination = new Point (350,200); break;
+				case BOTTOM: destination = new Point (300,250); break;
+				case LEFT  : destination = new Point (220,170); break;
 			}
-			for (int i = 0; i < cards.size(); i++) {
-				final Card card = cards.get(i);
-				if (card.getName().equals(pickedName)) {
-					card.Move(destination);
-					cards.remove(card);
-					
-					/* wait 3 seconds then the card disappeared */
-					new java.util.Timer().schedule(new java.util.TimerTask() {
-						@Override
-						public void run() { card.getJLabel().setVisible(false); }
-					}, 3000); 
-					break;
-				}
-			}
+			pickedCard.Move(destination) ;
+		}
+	}
+	public void RemovePickedcard() {
+		if (pickedCard != null) {
+			cards.remove(pickedCard);
+			pickedCard = null;
 		}
 	}
 
