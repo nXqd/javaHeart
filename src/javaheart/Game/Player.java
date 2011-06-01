@@ -59,10 +59,10 @@ public class Player {
 		Point pos = null, offset = null;
 
 		switch(this.position) {
-			case TOP   : 	pos = new Point(200,20); offset = new Point(20, 0);  break;
-			case RIGHT : 	pos = new Point(200 + 13*20 + 170, 80); offset = new Point(0,20);break;
-			case BOTTOM: 	pos = new Point(200, 20 + 13*20 + 100); offset = new Point(20,0);break;
-			case LEFT  : 	pos = new Point(20 , 80); offset = new Point(0,20); break;
+			case TOP   : 	pos = new Point(430,20); offset = new Point(-20, 0);  break;
+			case RIGHT : 	pos = new Point(200 + 13*20 + 140, 310); offset = new Point(0,-20);break;
+			case BOTTOM: 	pos = new Point(430, 20 + 13*20 + 100); offset = new Point(-20,0);break;
+			case LEFT  : 	pos = new Point(20 , 310); offset = new Point(0,-20); break;
 		}
 		
 		/* '1' and 1 in ascii is 48 difference so we minus 48 to get the int */
@@ -135,8 +135,9 @@ public class Player {
 
 	public void EnterBoard() {
 		// generate random cards here
-		for (int i = 0; i < cards.size(); i++) {
+		for (int i = 0; i< cards.size(); i++) {
 			boardPanel.add(cards.get(i).getJLabel());
+//			boardPanel.setComponentZOrder(cards.get(i).getJLabel(),i);
 		}
 	}
 
@@ -144,6 +145,9 @@ public class Player {
 		char pickedCardType = name.charAt(0);
 		boolean onlyHeart = Boolean.FALSE;
 		boolean hasSameTypeCard = Boolean.FALSE;	
+		boolean isLead = Boolean.FALSE;	
+
+		if (cardTypeOnboard == '\u0000') isLead = Boolean.TRUE;
 		/* Rules: you can't pick a heart while you have another type of card */
 		if (pickedCardType == 'H' && !heartBroken) {
 			onlyHeart = Boolean.TRUE;
@@ -159,7 +163,6 @@ public class Player {
 		}
 		/* Rules: You must pick the card has the same type of the one who leads */
 		if (pickedCardType != cardTypeOnboard) {
-			if (cardTypeOnboard == '\u0000') hasSameTypeCard = Boolean.TRUE;
 			for (Card card : cards) {
 				if (card.getName().charAt(0) == cardTypeOnboard) {
 					addHelp("Bạn phải chọn quân bài cùng loại với đối thủ");
@@ -174,7 +177,7 @@ public class Player {
 			pickedCard = null;
 		} else if( heartBroken 
 		    || (pickedCardType != 'H' && !hasSameTypeCard) 
-		    || (pickedCardType != 'H' && hasSameTypeCard) ) 
+		    || (pickedCardType != 'H' && isLead) ) 
 		{ pickCard(name);}
 		/* unpick the card */
 	}
